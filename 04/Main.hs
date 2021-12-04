@@ -5,7 +5,6 @@ module Main where
 
 import qualified Data.Text as T (lines, splitOn, unpack, words)
 import qualified Data.Text.IO as T (readFile)
-import Debug.Trace
 import Data.List
 
 type Row a = [a]
@@ -18,6 +17,7 @@ type Digit = Int
 
 type Board = Matrix (Marked, Digit)
 
+-- get the numbers and boards from input text file
 fromFile :: FilePath -> IO (Row Digit, [Matrix Digit])
 fromFile f = do
   ts <- T.splitOn "\n\n" <$> T.readFile f
@@ -27,32 +27,40 @@ fromFile f = do
           tail ts
   return (rs, bs)
 
+-- transpose the matrix so that accessing by row returns column
 getCols :: Matrix a -> Matrix a
 getCols [] = [] -- nonsense
 getCols [xs] = [[x] | x <- xs]
 getCols (xs : xss) = zipWith (:) xs (getCols xss)
 
+-- simply for the symmerty
 getRows :: Matrix a -> Matrix a
 getRows = id
 
+-- marka cell if the number matches input
 markCell :: Digit -> (Marked, Digit) -> (Marked, Digit)
 markCell x (m, d) = (x == d || m, d)
 
+-- mark cell for a board
 markBoard :: Digit -> Board -> Board
 markBoard x = map (map (markCell x))
 
+-- check if every cell of a row is marked
 checkRow :: Row (Marked, Digit) -> Bool
 checkRow = all fst
 
+-- check if any row or column is marked
 checkBoard :: Board -> Bool
 checkBoard board = r || c
   where
     r = any checkRow (getRows board)
     c = any checkRow (getCols board)
 
+-- calculate scores of the board by sum up all numbarked cells
 score :: Board -> Digit
 score = sum . map snd . concatMap (filter (not . fst))
 
+-- main logic for `solve1`
 bingo :: Row Digit -> [Board] -> Maybe (Digit, Board)
 bingo [] _ = Nothing
 bingo (xs : xss) ys =
@@ -83,13 +91,15 @@ binog (xs : xss) ys =
     yss = filter checkBoard ysm    
 binog [] _ = Nothing
 
-solve1 :: FilePath -> IO (Maybe Digit)
+-- Part 1
+solve1 :: FilePath -> IO (Maybe Int)
 solve1 f = do
   (xs, ys) <- fromFile f
   let b = bingo xs (map (map (map (False,))) ys)
   let s = (\(d, r) -> d * score r) <$> b
   return s
 
+-- Part 2
 solve2 :: FilePath -> IO (Maybe Int)
 solve2 f = do
   (xs, ys) <- fromFile f
