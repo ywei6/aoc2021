@@ -65,13 +65,13 @@ takeAfter :: Digit -> Row Digit -> Row Digit
 takeAfter _ [] = []
 takeAfter y (xs : xss) = if xs == y then xss else takeAfter y xss
 
+-- main logic for `solve2`
 binog :: Row Digit -> [Board] -> Maybe (Digit, Board)
 binog (xs : xss) [ys] =
   if checkBoard ysm
      then Just (xs, ysm)
      else binog xss [ysm]
-  where ysm = markBoard xs ys
-        
+  where ysm = markBoard xs ys    
 binog (xs : xss) ys =
   if not (null xss)
     then binog xss (ysm \\ yss)
@@ -80,8 +80,7 @@ binog (xs : xss) ys =
          else Just (xs, head yss) -- one number and one board
   where
     ysm = map (markBoard xs) ys
-    yss = filter checkBoard ysm
-    
+    yss = filter checkBoard ysm    
 binog [] _ = Nothing
 
 solve1 :: FilePath -> IO (Maybe Digit)
